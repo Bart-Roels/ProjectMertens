@@ -5,8 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ProjectMertens"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        
+        Title="Overuren - Home" Height="350" Width="500">
+    <Grid Margin="10,0,10,10">
+        <Button Name="button1"
+        Click="button1_Click" Margin="294,218,30,30">
+            Upload CSV
+        </Button>
+        <Label Content="Overuren tool" HorizontalAlignment="Left" Margin="30,30,0,0" VerticalAlignment="Top" IsEnabled="False" FontSize="24" FontFamily="Rockwell Extra Bold" FontWeight="Bold"/>
+        <TextBlock HorizontalAlignment="Left" Margin="37,73,0,0" TextWrapping="Wrap" Text="Om van start te gaan, gelieve een .csv te uploaden door op onderstaande knop te drukken. " VerticalAlignment="Top" Width="425"/>
+        <Image HorizontalAlignment="Left" Height="141" Margin="37,138,0,0" VerticalAlignment="Top" Width="156" Source="images/clock.png"/>
     </Grid>
 </Window>
