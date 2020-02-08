@@ -90,6 +90,7 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <None Include="testcsv\inlog_uitloggen.csv" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

@@ -19,16 +19,8 @@ namespace ProjectMertens
     public class sleutel
     {
         //deze waarden bevatten de klasse sleutel
-        public string badge
-        {
-            get;
-            set;
-        }
-        public string datum
-        {
-            get;
-            set;
-        }
+        public string badge { get; set; }
+        public string datum { get; set; }
 
         public sleutel(string _badge, string _datum)
         {
@@ -56,16 +48,8 @@ namespace ProjectMertens
     public class waarde
     {
         //klasse waarde bevat volgende waarden
-        public string start
-        {
-            get;
-            set;
-        }
-        public string einde
-        {
-            get;
-            set;
-        }
+        public string start { get; set; }
+        public string einde { get; set; }
 
         public waarde(string _start, string _einde)
         {
@@ -103,10 +87,8 @@ namespace ProjectMertens
                 using (var reader = new StreamReader(path))
                 {
 
-                    var gegevens = new Dictionary<sleutel,
-                        List<waarde>>();
-                    var overuren = new Dictionary<sleutel,
-                        TimeSpan>();
+                    var gegevens = new Dictionary<sleutel, List<waarde>>();
+                    var overuren = new Dictionary<sleutel, TimeSpan>();
 
                     //values[0] //nr's based op de csv zn kolomnrs (badgenr)
                     //values[2] //datum
@@ -163,81 +145,85 @@ namespace ProjectMertens
                     }
                 }
             }
-        }
-        public static TimeSpan Overuurberekening(TimeSpan begin, TimeSpan einde, bool voormiddag, DateTime datum)
-        {
-            // Constanten
-            TimeSpan BeginUur = new TimeSpan(8, 0, 0);
-            TimeSpan StartUurmiddagPauze = new TimeSpan(12, 0, 0);
-            TimeSpan EindUurMiddagPauze = new TimeSpan(13, 0, 0);
-            TimeSpan EindUur = new TimeSpan(17, 0, 0);
-            TimeSpan EindUurVrijdag = new TimeSpan(16, 0, 0);
-
-
-            // Aantal overUren en aantal Uren te laat gestart 
-            TimeSpan overUren = new TimeSpan(0, 0, 0);
-            TimeSpan TotaaloverUren = new TimeSpan(0, 0, 0);
-            // Vraag eerste uur op 
-
-            if (voormiddag)
+            }
+            public static TimeSpan Overuurberekening(TimeSpan begin, TimeSpan einde, bool voormiddag, DateTime datum)
             {
-                // Als begin uur van werknemer uur grooter dan standaard begin uur is 
-                if (begin > BeginUur) //te laat
-                {
-                    // Beginuur van werknemer - beginuur = aantal Uren te laat begonnen
-                    overUren.Subtract(BeginUur - begin);
-                    Console.WriteLine(datum.ToString() + "Overuren aftrekken, te laat toegekomen: " + overUren.ToString());
-                }
+                // Constanten
+                TimeSpan BeginUur = new TimeSpan(8, 0, 0);
+                TimeSpan StartUurmiddagPauze = new TimeSpan(12, 0, 0);
+                TimeSpan EindUurMiddagPauze = new TimeSpan(13, 0, 0);
+                TimeSpan EindUur = new TimeSpan(17, 0, 0);
+                TimeSpan EindUurVrijdag = new TimeSpan(16, 0, 0);
 
-                // Als eind uur van werknemer uur grooter dan standaard eind uur
-                if (einde < StartUurmiddagPauze) //te vroeg vertokken
+
+                // Aantal overUren en aantal Uren te laat gestart 
+                TimeSpan overUren = new TimeSpan(0, 0, 0);
+                TimeSpan TotaaloverUren = new TimeSpan(0, 0, 0);
+                // Vraag eerste uur op 
+
+                if (voormiddag)
                 {
-                    // Beginuur van werknemer - beginuur = overuren
-                    overUren = overUren.Subtract(EindUur - einde);
-                    Console.WriteLine(datum.ToString() + "Overuren aftrekken, te vroeg vertokken: " + overUren.ToString());
+                    // Als begin uur van werknemer uur grooter dan standaard begin uur is 
+                    if (begin > BeginUur) //te laat
+                    {
+                        // Beginuur van werknemer - beginuur = aantal Uren te laat begonnen
+                        overUren.Subtract(BeginUur - begin);
+                        Console.WriteLine(datum.ToString() + "Overuren aftrekken, te laat toegekomen: " + overUren.ToString());
+                    }
+
+                    // Als eind uur van werknemer uur grooter dan standaard eind uur
+                    if (einde < StartUurmiddagPauze) //te vroeg vertokken
+                    {
+                        // Beginuur van werknemer - beginuur = overuren
+                        overUren = overUren.Subtract(EindUur - einde);
+                        Console.WriteLine(datum.ToString() + "Overuren aftrekken, te vroeg vertokken: " + overUren.ToString());
                 }
             }
-            else
-            {
-                // Als begin uur van werknemer uur grooter dan standaard begin uur is 
-                if (begin > EindUurMiddagPauze)
+                else
                 {
-                    // Beginuur van werknemer - beginuur = aantal Uren te laat begonnen
-                    overUren.Subtract(begin - BeginUur);
-                    Console.WriteLine(datum.ToString() + "Overuren aftrekken, te laat toegekomen: " + overUren.ToString());
+                    // Als begin uur van werknemer uur grooter dan standaard begin uur is 
+                    if (begin > EindUurMiddagPauze)
+                    {
+                        // Beginuur van werknemer - beginuur = aantal Uren te laat begonnen
+                        overUren.Subtract(begin - BeginUur);
+                        Console.WriteLine(datum.ToString() + "Overuren aftrekken, te laat toegekomen: " + overUren.ToString());
+                    }
+
+
+                    // Als eind uur van werknemer uur grooter dan standaard eind uur
+                    if (einde < EindUur && IsVrijdag(datum))
+                    {
+                        // Beginuur van werknemer - beginuur = overuren
+                        overUren = overUren.Subtract(einde - EindUurVrijdag);
+                        Console.WriteLine(datum.ToString() + "Overuren aftrekken, te vroeg vertokken: " + overUren.ToString());
+                    }
+                    else
+                    {
+                        if (einde < EindUur && !IsVrijdag(datum))
+                        {
+                            overUren = overUren.Subtract(einde - EindUur);
+                            Console.WriteLine(datum.ToString() + "Overuren aftrekken, te vroeg vertokken: " + overUren.ToString());
+                        }
+                    }
                 }
+                return overUren;
+            }
 
-
-                // Als eind uur van werknemer uur grooter dan standaard eind uur
-                if (einde < EindUur && IsVrijdag(datum))
+            public static bool IsVrijdag(DateTime datum)
+            {
+                if (datum.DayOfWeek == DayOfWeek.Friday)
                 {
-                    // Beginuur van werknemer - beginuur = overuren
-                    overUren = overUren.Subtract(einde - EindUurVrijdag);
-                    Console.WriteLine(datum.ToString() + "Overuren aftrekken, te vroeg vertokken: " + overUren.ToString());
+                    return true;
                 }
                 else
                 {
-                    if (einde < EindUur && !IsVrijdag(datum))
-                    {
-                        overUren = overUren.Subtract(einde - EindUur);
-                        Console.WriteLine(datum.ToString() + "Overuren aftrekken, te vroeg vertokken: " + overUren.ToString());
-                    }
+                    return false;
                 }
             }
-            return overUren;
-        }
 
-        public static bool IsVrijdag(DateTime datum)
-        {
-            if (datum.DayOfWeek == DayOfWeek.Friday)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
         }
-
     }
-}
+
+
+
+
