@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.IO;
+using CsvHelper;
 
 namespace ProjectMertens
 {
@@ -21,11 +22,14 @@ namespace ProjectMertens
         //deze waarden bevatten de klasse sleutel
         public string badge { get; set; }
         public string datum { get; set; }
+        public string naam { get; set; }
 
-        public sleutel(string _badge, string _datum)
+
+        public sleutel(string _badge, string _datum, string _naam)
         {
             badge = _badge;
             datum = _datum;
+            naam = _naam;
         }
         public override int GetHashCode()
         {
@@ -94,6 +98,7 @@ namespace ProjectMertens
                     //values[2] //datum
                     //values[3] //beginuur
                     //values[4] //einduur
+                    //values[8] //naam
 
                     string headerLine = reader.ReadLine();
                     while (!reader.EndOfStream)
@@ -101,7 +106,7 @@ namespace ProjectMertens
                         var line = reader.ReadLine();
                         var values = line.Split(';');
 
-                        sleutel sl = new sleutel(values[0], values[2]);
+                        sleutel sl = new sleutel(values[0], values[2], values[8]);
                         List<waarde> temp;
                         waarde w = new waarde(values[3], values[4]);
                         if (gegevens.TryGetValue(sl, out temp))
@@ -120,31 +125,44 @@ namespace ProjectMertens
                     {
                         if (pair.Value.Count == 1)
                         {
+                            Console.WriteLine("Mag niet");
                             waarde datum = pair.Value.First();
                             Console.WriteLine(datum.start + " " + datum.einde);
                             overuren[pair.Key] = Overuurberekening(TimeSpan.Parse(datum.start), TimeSpan.Parse(datum.einde), true, DateTime.Parse(pair.Key.datum));
                         }
                         else
                         {
-                            foreach (waarde datum in pair.Value) // Loop through List with foreach
-                            {
-                                Console.WriteLine("Voormiddag");
-                                overuren[pair.Key] = Overuurberekening(TimeSpan.Parse(datum.start), TimeSpan.Parse(datum.einde), true, DateTime.Parse(pair.Key.datum));
-                                Console.WriteLine("Namiddag");
-                                overuren[pair.Key] = Overuurberekening(TimeSpan.Parse(datum.start), TimeSpan.Parse(datum.einde), false, DateTime.Parse(pair.Key.datum));
-                            }
+                            waarde datum = pair.Value[0];
+                            Console.WriteLine("Voormiddag");
+                            overuren[pair.Key] = Overuurberekening(TimeSpan.Parse(datum.start), TimeSpan.Parse(datum.einde), true, DateTime.Parse(pair.Key.datum));
+                            datum = pair.Value[1];
+                            Console.WriteLine("Namiddag");
+                            overuren[pair.Key] += Overuurberekening(TimeSpan.Parse(datum.start), TimeSpan.Parse(datum.einde), false, DateTime.Parse(pair.Key.datum));
+                            Console.WriteLine("Totaal overuren: " + overuren[pair.Key]);
                         }
                     }
                     Console.WriteLine("output:");
                     //gegevens.Select(i => $"{i.Key.badge + " " + i.Key.datum}: {i.Value.ToString()}").ToList().ForEach(Console.WriteLine);
+
+                    var csv = new StringBuilder();
+                    var newLine = string.Format("Badgenr;Naam;Datum;Overuren");
+                    csv.AppendLine(newLine);
+
                     foreach (var pair in gegevens)
                     {
-                        Console.WriteLine(pair.Key.badge + " " + pair.Key.datum);
-                        foreach (var uren in overuren)
-                        {
-                            Console.WriteLine(uren.Value);
-                        }
+                        Console.WriteLine(pair.Key.badge + " " + pair.Key.datum);       
+                        Console.WriteLine(overuren[pair.Key]);
+
+                        newLine = string.Format(pair.Key.badge + ";" + pair.Key.naam + ";" + pair.Key.datum + ";" + overuren[pair.Key]);
+                        csv.AppendLine(newLine);
                     }
+
+                    //after your loop
+                    string pad = "D:\\Desktop\\output.csv";
+                    File.WriteAllText(@pad, csv.ToString());
+                    MessageBox.Show("De CSV met output is weggeschreven naar: " + pad);
+
+
                 }
             }
             }
@@ -164,57 +182,61 @@ namespace ProjectMertens
                 TimeSpan TotaaloverUren = new TimeSpan(0, 0, 0);
                 TimeSpan teVroegVertrokken = new TimeSpan(0, 0, 0);
                
-                // Vraag eerste uur op 
 
-                if (voormiddag == true)
+                if (voormiddag)
                 {
                     // Als begin uur van werknemer uur grooter dan standaard begin uur is 
-                    if (beginUurWerknemer >= beginUurConstant) //te laat gestopt (smorgens)
+                    if (beginUurWerknemer > beginUurConstant) //te laat gestart (smorgens)
                     {
                         // Beginuur van werknemer - beginuur = aantal Uren te laat begonnen
-                        telaat = telaat.Subtract(beginUurConstant - beginUurWerknemer);
-                        Console.WriteLine(datum.ToString() + " Overuren aftrekken, te laat toegekomen (smorgens): " + telaat);
+                        overUren = overUren.Subtract(beginUurWerknemer - beginUurConstant);
+                        Console.WriteLine(datum.ToString() + " Overuren aftrekken, te laat toegekomen (smorgens): " + overUren);
                     }
-                   
-
                     // Als eind uur van werknemer uur grooter dan standaard eind uur
-                    if (eindUurWerknemer <= StartUurmiddagPauze) //te vroeg gestopt (smorgens)
+                    if (eindUurWerknemer < StartUurmiddagPauze) //te vroeg gestopt (smorgens)
                     {
                         // Beginuur van werknemer - beginuur = overuren
-                        telaat = telaat.Subtract(StartUurmiddagPauze - eindUurWerknemer);
-                        Console.WriteLine(datum.ToString() + " Overuren aftrekken, te vroeg gestopt (smiddag): " + telaat.ToString());
+                        overUren = overUren.Subtract(StartUurmiddagPauze - eindUurWerknemer);
+                        Console.WriteLine(datum.ToString() + " Overuren aftrekken, te vroeg gestopt (smiddag): " + overUren);
                     }
-                
+                    if (eindUurWerknemer > StartUurmiddagPauze) // overgewerkt in voormiddag
+                    {
+                        overUren = overUren.Add(eindUurWerknemer - StartUurmiddagPauze );
+                        Console.WriteLine(datum.ToString() + " Overuren optellen, te lang gestart (voormiddag) : " + overUren);
+                    }
                 } 
-
                 else
                 {
-                    // Als begin uur van werknemer uur grooter dan standaard begin uur is 
-                    if (beginUurWerknemer >= EindUurMiddagPauze) // te laat begonnen (smiddags)
+                        // Als begin uur van werknemer uur grooter dan standaard begin uur is 
+                    if (beginUurWerknemer > EindUurMiddagPauze) // te laat begonnen (smiddags)
                     {
-                        // Beginuur van werknemer - beginuur = aantal Uren te laat begonnen
-                        telaat = telaat.Subtract(beginUurWerknemer - EindUurMiddagPauze);
-                        Console.WriteLine(datum.ToString() + " Overuren aftrekken, te laat toegekomen (smiddags) : " + telaat.ToString());
+                       // Beginuur van werknemer - beginuur = aantal Uren te laat begonnen
+                         overUren = overUren.Subtract(beginUurWerknemer - EindUurMiddagPauze);
+                        Console.WriteLine(datum.ToString() + " Overuren aftrekken, te laat gestart (smiddags) : " + overUren);
                     }
-                    // Als eind uur van werknemer uur grooter dan standaard eind uur
+                       // Te vroeg gestopt op vrijdag
                     if (eindUurWerknemer < EindUur && IsVrijdag(datum))
                     {
                         // Beginuur van werknemer - beginuur = overuren
-                        overUren = overUren.Subtract(eindUurWerknemer - EindUurVrijdag);
-                        Console.WriteLine(datum.ToString() + " Overuren aftrekken, te vroeg vertokken: " + overUren.ToString());
+                        overUren = overUren.Subtract(EindUurVrijdag - eindUurWerknemer);
+                        Console.WriteLine(datum.ToString() + " Overuren aftrekken, te vroeg vertokken op vrijdag: " + overUren);
                     }
-                    // else if (eindUurWerknemer < EindUur && !IsVrijdag(datum))
-                    // {
-                    //     overUren = overUren.Subtract(eindUurWerknemer - EindUur);
-                    //     Console.WriteLine(datum.ToString() + "Overuren aftrekken, te vroeg vertokken: " + overUren.ToString());
-                    // }
-                                          
+                    if (eindUurWerknemer < EindUur && !IsVrijdag(datum))
+                    {
+                        overUren = overUren.Subtract(EindUur - eindUurWerknemer);
+                        Console.WriteLine(datum.ToString() + " Overuren aftrekken, te vroeg vertokken: " + overUren);
+                    }
+                    if (eindUurWerknemer > EindUur && !IsVrijdag(datum)) // overgewerkt in namiddag
+                    {
+                        overUren = overUren.Add(eindUurWerknemer - EindUur);
+                        Console.WriteLine(datum.ToString() + " Overuren optellen, te lang gewerkt (namiddag) : " + overUren);
+                    }
+                    if (eindUurWerknemer > EindUur && IsVrijdag(datum)) // overgewerkt in namiddag
+                    {
+                        overUren = overUren.Add(eindUurWerknemer - EindUur);
+                        Console.WriteLine(datum.ToString() + " Overuren optellen, te lang gewerkt (vrijdag namiddag) : " + overUren);
+                    }
                 }
-
-                
-
-
-
                 return overUren;
             }
 
