@@ -128,7 +128,9 @@ namespace ProjectMertens
                         {
                             foreach (waarde datum in pair.Value) // Loop through List with foreach
                             {
+                                Console.WriteLine("Voormiddag");
                                 overuren[pair.Key] = Overuurberekening(TimeSpan.Parse(datum.start), TimeSpan.Parse(datum.einde), true, DateTime.Parse(pair.Key.datum));
+                                Console.WriteLine("Namiddag");
                                 overuren[pair.Key] = Overuurberekening(TimeSpan.Parse(datum.start), TimeSpan.Parse(datum.einde), false, DateTime.Parse(pair.Key.datum));
                             }
                         }
@@ -146,10 +148,10 @@ namespace ProjectMertens
                 }
             }
             }
-            public static TimeSpan Overuurberekening(TimeSpan begin, TimeSpan einde, bool voormiddag, DateTime datum)
+            public static TimeSpan Overuurberekening(TimeSpan beginUurWerknemer, TimeSpan eindUurWerknemer, bool voormiddag,  DateTime datum)
             {
                 // Constanten
-                TimeSpan BeginUur = new TimeSpan(8, 0, 0);
+                TimeSpan beginUurConstant = new TimeSpan(8, 0, 0);
                 TimeSpan StartUurmiddagPauze = new TimeSpan(12, 0, 0);
                 TimeSpan EindUurMiddagPauze = new TimeSpan(13, 0, 0);
                 TimeSpan EindUur = new TimeSpan(17, 0, 0);
@@ -158,54 +160,61 @@ namespace ProjectMertens
 
                 // Aantal overUren en aantal Uren te laat gestart 
                 TimeSpan overUren = new TimeSpan(0, 0, 0);
+                TimeSpan telaat = new TimeSpan(0, 0, 0);
                 TimeSpan TotaaloverUren = new TimeSpan(0, 0, 0);
+                TimeSpan teVroegVertrokken = new TimeSpan(0, 0, 0);
+               
                 // Vraag eerste uur op 
 
-                if (voormiddag)
+                if (voormiddag == true)
                 {
                     // Als begin uur van werknemer uur grooter dan standaard begin uur is 
-                    if (begin > BeginUur) //te laat
+                    if (beginUurWerknemer >= beginUurConstant) //te laat gestopt (smorgens)
                     {
                         // Beginuur van werknemer - beginuur = aantal Uren te laat begonnen
-                        overUren.Subtract(BeginUur - begin);
-                        Console.WriteLine(datum.ToString() + "Overuren aftrekken, te laat toegekomen: " + overUren.ToString());
+                        telaat = telaat.Subtract(beginUurConstant - beginUurWerknemer);
+                        Console.WriteLine(datum.ToString() + " Overuren aftrekken, te laat toegekomen (smorgens): " + telaat);
                     }
+                   
 
                     // Als eind uur van werknemer uur grooter dan standaard eind uur
-                    if (einde < StartUurmiddagPauze) //te vroeg vertokken
+                    if (eindUurWerknemer <= StartUurmiddagPauze) //te vroeg gestopt (smorgens)
                     {
                         // Beginuur van werknemer - beginuur = overuren
-                        overUren = overUren.Subtract(EindUur - einde);
-                        Console.WriteLine(datum.ToString() + "Overuren aftrekken, te vroeg vertokken: " + overUren.ToString());
-                }
-            }
+                        telaat = telaat.Subtract(StartUurmiddagPauze - eindUurWerknemer);
+                        Console.WriteLine(datum.ToString() + " Overuren aftrekken, te vroeg gestopt (smiddag): " + telaat.ToString());
+                    }
+                
+                } 
+
                 else
                 {
                     // Als begin uur van werknemer uur grooter dan standaard begin uur is 
-                    if (begin > EindUurMiddagPauze)
+                    if (beginUurWerknemer >= EindUurMiddagPauze) // te laat begonnen (smiddags)
                     {
                         // Beginuur van werknemer - beginuur = aantal Uren te laat begonnen
-                        overUren.Subtract(begin - BeginUur);
-                        Console.WriteLine(datum.ToString() + "Overuren aftrekken, te laat toegekomen: " + overUren.ToString());
+                        telaat = telaat.Subtract(beginUurWerknemer - EindUurMiddagPauze);
+                        Console.WriteLine(datum.ToString() + " Overuren aftrekken, te laat toegekomen (smiddags) : " + telaat.ToString());
                     }
-
-
                     // Als eind uur van werknemer uur grooter dan standaard eind uur
-                    if (einde < EindUur && IsVrijdag(datum))
+                    if (eindUurWerknemer < EindUur && IsVrijdag(datum))
                     {
                         // Beginuur van werknemer - beginuur = overuren
-                        overUren = overUren.Subtract(einde - EindUurVrijdag);
-                        Console.WriteLine(datum.ToString() + "Overuren aftrekken, te vroeg vertokken: " + overUren.ToString());
+                        overUren = overUren.Subtract(eindUurWerknemer - EindUurVrijdag);
+                        Console.WriteLine(datum.ToString() + " Overuren aftrekken, te vroeg vertokken: " + overUren.ToString());
                     }
-                    else
-                    {
-                        if (einde < EindUur && !IsVrijdag(datum))
-                        {
-                            overUren = overUren.Subtract(einde - EindUur);
-                            Console.WriteLine(datum.ToString() + "Overuren aftrekken, te vroeg vertokken: " + overUren.ToString());
-                        }
-                    }
+                    // else if (eindUurWerknemer < EindUur && !IsVrijdag(datum))
+                    // {
+                    //     overUren = overUren.Subtract(eindUurWerknemer - EindUur);
+                    //     Console.WriteLine(datum.ToString() + "Overuren aftrekken, te vroeg vertokken: " + overUren.ToString());
+                    // }
+                                          
                 }
+
+                
+
+
+
                 return overUren;
             }
 
