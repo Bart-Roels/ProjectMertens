@@ -93,6 +93,7 @@ namespace ProjectMertens
 
                     var gegevens = new Dictionary<sleutel, List<waarde>>();
                     var overuren = new Dictionary<sleutel, TimeSpan>();
+                    TimeSpan overurenTotaal = new TimeSpan(0,0,0);
 
                     //values[0] //nr's based op de csv zn kolomnrs (badgenr)
                     //values[2] //datum
@@ -125,7 +126,7 @@ namespace ProjectMertens
                     {
                         if (pair.Value.Count == 1)
                         {
-                            Console.WriteLine("Mag niet");
+                            Console.WriteLine("1 Maal gebatcht die dag.");
                             waarde datum = pair.Value.First();
                             Console.WriteLine(datum.start + " " + datum.einde);
                             overuren[pair.Key] = Overuurberekening(TimeSpan.Parse(datum.start), TimeSpan.Parse(datum.einde), true, DateTime.Parse(pair.Key.datum));
@@ -144,23 +145,25 @@ namespace ProjectMertens
                     Console.WriteLine("output:");
                     //gegevens.Select(i => $"{i.Key.badge + " " + i.Key.datum}: {i.Value.ToString()}").ToList().ForEach(Console.WriteLine);
 
-                    var csv = new StringBuilder();
-                    var newLine = string.Format("Badgenr;Naam;Datum;Overuren");
-                    csv.AppendLine(newLine);
+                    //var csv = new StringBuilder();
+                    //var newLine = string.Format("Badgenr;Naam;Datum;Overuren");
+                    //csv.AppendLine(newLine);
 
                     foreach (var pair in gegevens)
                     {
                         Console.WriteLine(pair.Key.badge + " " + pair.Key.datum);       
                         Console.WriteLine(overuren[pair.Key]);
-
-                        newLine = string.Format(pair.Key.badge + ";" + pair.Key.naam + ";" + pair.Key.datum + ";" + overuren[pair.Key]);
-                        csv.AppendLine(newLine);
+                        overurenTotaal += overuren[pair.Key];
+                        lblOutput.Text = ("In de maand " + DateTime.Parse(pair.Key.datum).ToString("MMMM") + " heeft " + pair.Key.naam + " (" + pair.Key.badge + ") " + overurenTotaal + " overuren gemaakt");
                     }
+                    
+                    ////newLine = string.Format(pair.Key.badge + ";" + pair.Key.naam + ";" + pair.Key.datum + ";" + overuren[pair.Key]);
+                    //csv.AppendLine(newLine);
 
-                    //after your loop
-                    string pad = "D:\\Desktop\\output.csv";
-                    File.WriteAllText(@pad, csv.ToString());
-                    MessageBox.Show("De CSV met output is weggeschreven naar: " + pad);
+                    ////after your loop
+                    //string pad = "D:\\Desktop\\output.csv";
+                    //File.WriteAllText(@pad, csv.ToString());
+                    //MessageBox.Show("De CSV met output is weggeschreven naar: " + pad);
 
 
                 }
@@ -181,7 +184,9 @@ namespace ProjectMertens
                 TimeSpan telaat = new TimeSpan(0, 0, 0);
                 TimeSpan TotaaloverUren = new TimeSpan(0, 0, 0);
                 TimeSpan teVroegVertrokken = new TimeSpan(0, 0, 0);
-               
+                TimeSpan kwartier = new TimeSpan(0, 15, 0);
+
+
 
                 if (voormiddag)
                 {
@@ -201,8 +206,12 @@ namespace ProjectMertens
                     }
                     if (eindUurWerknemer > StartUurmiddagPauze) // overgewerkt in voormiddag
                     {
-                        overUren = overUren.Add(eindUurWerknemer - StartUurmiddagPauze );
-                        Console.WriteLine(datum.ToString() + " Overuren optellen, te lang gestart (voormiddag) : " + overUren);
+                        Console.WriteLine("Overgewerkt");
+                        if (eindUurWerknemer - StartUurmiddagPauze > kwartier)
+                        {
+                        overUren = overUren.Add(eindUurWerknemer - StartUurmiddagPauze);
+                        Console.WriteLine(datum.ToString() + " Overuren optellen, te lang gewerkt (voormiddag) : " + overUren);
+                        }
                     }
                 } 
                 else
@@ -228,13 +237,21 @@ namespace ProjectMertens
                     }
                     if (eindUurWerknemer > EindUur && !IsVrijdag(datum)) // overgewerkt in namiddag
                     {
+                        Console.WriteLine("Overgewerkt");
+                        if (eindUurWerknemer - EindUur > kwartier)
+                        {
                         overUren = overUren.Add(eindUurWerknemer - EindUur);
                         Console.WriteLine(datum.ToString() + " Overuren optellen, te lang gewerkt (namiddag) : " + overUren);
+                        }
                     }
                     if (eindUurWerknemer > EindUur && IsVrijdag(datum)) // overgewerkt in namiddag
                     {
+                        Console.WriteLine("Overgewerkt");
+                        if (eindUurWerknemer - EindUur > kwartier)
+                        {
                         overUren = overUren.Add(eindUurWerknemer - EindUur);
                         Console.WriteLine(datum.ToString() + " Overuren optellen, te lang gewerkt (vrijdag namiddag) : " + overUren);
+                        }
                     }
                 }
                 return overUren;

@@ -6,13 +6,14 @@
         xmlns:local="clr-namespace:ProjectMertens"
         mc:Ignorable="d"
         Title="Overuren - Home" Height="350" Width="500">
-    <Grid Margin="10,0,10,10">
+    <Grid x:Name="lbl" Margin="10,0,10,10">
         <Button Name="button1"
-        Click="button1_Click" Margin="294,218,30,30">
+        Click="button1_Click" Margin="294,138,30,110">
             Upload CSV
         </Button>
         <Label Content="Overuren tool" HorizontalAlignment="Left" Margin="30,30,0,0" VerticalAlignment="Top" IsEnabled="False" FontSize="24" FontFamily="Rockwell Extra Bold" FontWeight="Bold"/>
         <TextBlock HorizontalAlignment="Left" Margin="37,73,0,0" TextWrapping="Wrap" Text="Om van start te gaan, gelieve een .csv te uploaden door op onderstaande knop te drukken. " VerticalAlignment="Top" Width="425"/>
         <Image HorizontalAlignment="Left" Height="141" Margin="37,138,0,0" VerticalAlignment="Top" Width="156" Source="images/clock.png"/>
+        <TextBlock x:Name="lblOutput" HorizontalAlignment="Left" Margin="184,223,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="278" Height="48"/>
     </Grid>
 </Window>
