@@ -207,7 +207,7 @@ namespace ProjectMertens
                     if (eindUurWerknemer > StartUurmiddagPauze) // overgewerkt in voormiddag
                     {
                         Console.WriteLine("Overgewerkt");
-                        if (eindUurWerknemer - StartUurmiddagPauze > kwartier)
+                        if (eindUurWerknemer - StartUurmiddagPauze >= kwartier)
                         {
                         overUren = overUren.Add(eindUurWerknemer - StartUurmiddagPauze);
                         Console.WriteLine(datum.ToString() + " Overuren optellen, te lang gewerkt (voormiddag) : " + overUren);
@@ -238,7 +238,7 @@ namespace ProjectMertens
                     if (eindUurWerknemer > EindUur && !IsVrijdag(datum)) // overgewerkt in namiddag
                     {
                         Console.WriteLine("Overgewerkt");
-                        if (eindUurWerknemer - EindUur > kwartier)
+                        if (eindUurWerknemer - EindUur >= kwartier)
                         {
                         overUren = overUren.Add(eindUurWerknemer - EindUur);
                         Console.WriteLine(datum.ToString() + " Overuren optellen, te lang gewerkt (namiddag) : " + overUren);
@@ -247,7 +247,7 @@ namespace ProjectMertens
                     if (eindUurWerknemer > EindUur && IsVrijdag(datum)) // overgewerkt in namiddag
                     {
                         Console.WriteLine("Overgewerkt");
-                        if (eindUurWerknemer - EindUur > kwartier)
+                        if (eindUurWerknemer - EindUur <= kwartier)
                         {
                         overUren = overUren.Add(eindUurWerknemer - EindUur);
                         Console.WriteLine(datum.ToString() + " Overuren optellen, te lang gewerkt (vrijdag namiddag) : " + overUren);
